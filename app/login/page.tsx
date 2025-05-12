@@ -22,6 +22,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -48,19 +49,12 @@ export default function LoginPage() {
           .then((data) => {
             console.log("Vérification du token:", data);
             if (data.valid) {
-              // Utiliser le rôle renvoyé par l'API
-              const userRole = data.role;
-              console.log("Rôle de l'utilisateur:", userRole);
-
-              if (userRole === "admin") {
-                console.log("Redirection vers /admin - Rôle: Admin");
-                window.location.href = "/admin";
-              } else {
-                console.log("Redirection vers /explorer - Rôle: Utilisateur");
-                window.location.href = "/explorer";
-              }
+              // Utilisateur connecté, ne pas rediriger automatiquement
+              console.log(
+                "Utilisateur connecté, aucune redirection automatique"
+              );
             } else {
-              console.log("Token invalide, nettoyage du localStorage");
+              console.log("Token invalide, rester sur la page de connexion");
               localStorage.removeItem("token");
               localStorage.removeItem("user");
             }
@@ -83,7 +77,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log("Tentative de connexion...");
+    setErrorMessage(null); // Réinitialiser le message d'erreur
 
     try {
       const response = await fetch("/api/auth/login", {
@@ -99,6 +93,15 @@ export default function LoginPage() {
       console.log("Rôle reçu:", data.user?.role);
 
       if (!response.ok) {
+        if (data.message === "Email ou mot de passe incorrect") {
+          setErrorMessage(
+            "Le mot de passe ou l'email est incorrect. Veuillez réessayer."
+          );
+        } else {
+          setErrorMessage(
+            data.message || "Une erreur est survenue lors de la connexion."
+          );
+        }
         throw new Error(data.message || "Erreur de connexion");
       }
 
@@ -138,6 +141,9 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Erreur de connexion:", error);
+      setErrorMessage(
+        error instanceof Error ? error.message : "Une erreur est survenue"
+      );
       toast({
         variant: "error",
         title: "Erreur de connexion",
@@ -152,6 +158,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#DAD7CD]/20 p-4">
       <div className="w-full max-w-md">
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {errorMessage}
+          </div>
+        )}
         <div className="text-center mb-6">
           <Link
             href="/register"

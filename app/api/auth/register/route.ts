@@ -76,6 +76,7 @@ export async function POST(req: NextRequest) {
       emailVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
+      role: "user",
     };
 
     const result = await users.insertOne(newUser);

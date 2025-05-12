@@ -22,12 +22,19 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+      // Ensure JWT_SECRET is defined
+      if (!process.env.JWT_SECRET) {
+        throw new Error(
+          "JWT_SECRET is not defined in the environment variables."
+        );
+      }
+
       // Vérifier le token
       console.log("🔍 Vérification du token...");
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "votre_secret_jwt"
-      ) as { userId: string; role: string };
+      const decoded = jwt.verify(token, process.env.JWT_SECRET) as {
+        userId: string;
+        role: string;
+      };
 
       console.log("📦 Token décodé:", {
         userId: decoded.userId,

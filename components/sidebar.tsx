@@ -9,7 +9,7 @@ const navigation = [
   { name: "Explorer", href: "/explorer", icon: Compass },
   { name: "Carte", href: "/map", icon: Map },
   { name: "Favoris", href: "/favorites", icon: Heart },
-  { name: "Profil", href: "/profile", icon: User },
+  { name: "Profil", href: "/profil", icon: User },
 ];
 
 export function Sidebar() {
@@ -22,7 +22,7 @@ export function Sidebar() {
           <Link href="/" className="text-2xl font-bold text-[#344E41]">
             Bladi Tourisme
           </Link>
-      </div>
+        </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
@@ -41,7 +41,7 @@ export function Sidebar() {
               </Link>
             );
           })}
-      </nav>
+        </nav>
         <div className="p-4 border-t border-gray-200">
           <button
             onClick={() => {
@@ -49,7 +49,7 @@ export function Sidebar() {
               window.location.href = "/login";
             }}
             className="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-100"
-              >
+          >
             <LogOut className="w-5 h-5 mr-3" />
             Déconnexion
           </button>

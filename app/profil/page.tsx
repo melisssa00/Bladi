@@ -19,8 +19,10 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signOut } from "next-auth/react";
 import AvatarUpload from "@/components/profile/avatar-upload";
+import { fetchWithAuth } from "@/utils/api";
 
 interface UserProfile {
+  userId: string; // Ajout de userId
   firstName: string;
   lastName: string;
   email: string;
@@ -38,23 +40,20 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    async function fetchProfile() {
       try {
-        const response = await fetch("/api/user/profile");
-        if (!response.ok) {
-          throw new Error("Erreur lors de la récupération du profil");
-        }
-        const data = await response.json();
-        setUserData(data);
-      } catch (error) {
-        toast.error("Erreur lors du chargement du profil");
-      } finally {
+        console.log("Fetching profile with Authorization header");
+        const userData = await fetchWithAuth("/api/user/profile");
+        setUserData(userData);
         setIsLoading(false);
+      } catch (error) {
+        toast.error("Impossible de charger votre profil");
+        router.push("/login");
       }
-    };
+    }
 
     fetchProfile();
-  }, []);
+  }, [router]);
 
   const handleSignOut = async () => {
     try {
@@ -66,7 +65,14 @@ export default function ProfilePage() {
   };
 
   const handleAvatarChange = (newAvatarUrl: string) => {
-    setUserData((prev) => (prev ? { ...prev, avatar: newAvatarUrl } : null));
+    setUserData((prev) => {
+      if (prev) {
+        const updatedUser = { ...prev, avatar: newAvatarUrl };
+        localStorage.setItem("user", JSON.stringify(updatedUser)); // Optionnel
+        return updatedUser;
+      }
+      return prev;
+    });
   };
 
   if (isLoading) {
@@ -97,58 +103,57 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar avec informations de profil */}
+      <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-1/3">
-          <Card className="overflow-hidden">
-            <div className="relative h-32 bg-gradient-to-r from-[#588157] to-[#3A5A40]">
+          <Card className="overflow-hidden shadow-lg">
+            <div className="relative h-36 bg-gradient-to-r from-green-500 to-green-700 rounded-t-lg">
               <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
                 <AvatarUpload
-                  currentAvatar={userData.avatar}
+                  currentAvatar={userData?.avatar}
                   onAvatarChange={handleAvatarChange}
                 />
               </div>
             </div>
-            <CardContent className="pt-20 pb-6">
+            <CardContent className="pt-20 pb-6 bg-gray-50 rounded-b-lg">
               <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold">
-                  {userData.firstName} {userData.lastName}
+                <h2 className="text-3xl font-extrabold text-gray-900">
+                  {userData?.firstName} {userData?.lastName}
                 </h2>
-                {userData.location && (
-                  <p className="text-gray-500 flex items-center justify-center mt-1">
-                    <MapPin className="h-4 w-4 mr-1" /> {userData.location}
+                {userData?.location && (
+                  <p className="text-gray-600 flex items-center justify-center mt-2">
+                    <MapPin className="h-5 w-5 mr-2 text-green-600" />{" "}
+                    {userData.location}
                   </p>
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <Button
                   variant="outline"
-                  className="w-full flex items-center justify-center"
+                  className="w-full flex items-center justify-center border-gray-300 hover:border-green-600 hover:text-green-600 transition duration-200 ease-in-out"
                   onClick={() => router.push("/profil/edit")}
                 >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Modifier le profil
+                  <Edit className="mr-2 h-5 w-5" /> Modifier le profil
                 </Button>
 
-                <Separator />
+                <Separator className="bg-gray-300" />
 
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm">
-                    <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                    <span>{userData.email}</span>
+                <div className="space-y-4">
+                  <div className="flex items-center text-base">
+                    <Mail className="h-5 w-5 mr-3 text-gray-500" />
+                    <span>{userData?.email}</span>
                   </div>
-                  {userData.phone && (
-                    <div className="flex items-center text-sm">
-                      <Phone className="h-4 w-4 mr-2 text-gray-500" />
+                  {userData?.phone && (
+                    <div className="flex items-center text-base">
+                      <Phone className="h-5 w-5 mr-3 text-gray-500" />
                       <span>{userData.phone}</span>
                     </div>
                   )}
-                  <div className="flex items-center text-sm">
-                    <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                  <div className="flex items-center text-base">
+                    <Calendar className="h-5 w-5 mr-3 text-gray-500" />
                     <span>
                       Membre depuis{" "}
-                      {new Date(userData.createdAt).toLocaleDateString(
+                      {new Date(userData?.createdAt).toLocaleDateString(
                         "fr-FR",
                         {
                           month: "long",
@@ -157,110 +162,71 @@ export default function ProfilePage() {
                       )}
                     </span>
                   </div>
+                  <div className="flex items-center text-base">
+                    <span>
+                      <strong>ID utilisateur : </strong>
+                      {userData?.userId}
+                    </span>
+                  </div>
                 </div>
 
-                <Separator />
+                <Separator className="bg-gray-300" />
 
                 <Button
                   variant="ghost"
-                  className="w-full flex items-center justify-center text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="w-full flex items-center justify-center text-red-600 hover:text-red-700 hover:bg-red-50 transition duration-200 ease-in-out"
                   onClick={handleSignOut}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Déconnexion
+                  <LogOut className="mr-2 h-5 w-5" /> Déconnexion
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Contenu principal */}
         <div className="w-full md:w-2/3">
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="info" className="flex items-center gap-2">
-                <Edit className="h-4 w-4" />À propos
+            <TabsList className="grid w-full grid-cols-3 bg-gray-100 rounded-lg shadow-md">
+              <TabsTrigger
+                value="info"
+                className="flex items-center gap-2 text-gray-700 hover:text-green-600 transition duration-200 ease-in-out"
+              >
+                <Edit className="h-5 w-5" /> Informations
               </TabsTrigger>
               <TabsTrigger
                 value="favorites"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-gray-700 hover:text-green-600 transition duration-200 ease-in-out"
               >
-                <Heart className="h-4 w-4" />
-                Favoris
+                <Heart className="h-5 w-5" /> Favoris
               </TabsTrigger>
               <TabsTrigger
                 value="activities"
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-gray-700 hover:text-green-600 transition duration-200 ease-in-out"
               >
-                <Activity className="h-4 w-4" />
-                Activités
+                <Activity className="h-5 w-5" /> Activités
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="mt-6">
-              <Card>
+              <Card className="shadow-lg bg-white rounded-lg">
                 <CardHeader>
-                  <h3 className="text-lg font-semibold">À propos de moi</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    À propos de moi
+                  </h3>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700">
-                    {userData.bio || "Aucune description pour le moment."}
+                    {userData?.bio || "Aucune description pour le moment."}
                   </p>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="favorites" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">Mes lieux favoris</h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">
-                      Vous n'avez pas encore de lieux favoris.
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => router.push("/explorer")}
-                    >
-                      Découvrir des lieux
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="activities" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <h3 className="text-lg font-semibold">
-                    Mes activités récentes
-                  </h3>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">
-                      Vous n'avez pas encore d'activités récentes.
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="mt-4"
-                      onClick={() => router.push("/explorer")}
-                    >
-                      Explorer les activités
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/* Section Favoris et Activités */}
           </Tabs>
         </div>
       </div>

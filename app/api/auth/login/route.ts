@@ -87,19 +87,28 @@ export async function POST(req: NextRequest) {
 
     console.log("✅ Email vérifié");
 
+    // Normalize the email before adding it to the token payload
+    const normalizedEmail = user.email.trim().toLowerCase();
+
     // Création du token avec le rôle
     console.log("🔑 Création du token...");
     const tokenPayload = {
       userId: user._id.toString(),
-      role: user.role || "user", // Utiliser directement le rôle de la base de données
+      email: normalizedEmail, // Use normalized email
+      role: user.role || "user", // Use the role directly from the database
     };
     console.log("📦 Payload du token:", tokenPayload);
 
-    const token = jwt.sign(
-      tokenPayload,
-      process.env.JWT_SECRET || "votre_secret_jwt",
-      { expiresIn: "7d" }
-    );
+    // Ensure JWT_SECRET is defined
+    if (!process.env.JWT_SECRET) {
+      throw new Error(
+        "JWT_SECRET is not defined in the environment variables."
+      );
+    }
+
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     console.log("✅ Token créé avec le rôle:", user.role);
 

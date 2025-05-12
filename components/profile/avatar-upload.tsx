@@ -45,7 +45,14 @@ export default function AvatarUpload({
 
       const response = await fetch("/api/user/avatar", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
         body: formData,
+      });
+
+      console.log("Headers sent:", {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
       });
 
       if (!response.ok) {

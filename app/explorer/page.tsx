@@ -255,6 +255,17 @@ export default function ExplorerPage() {
           </div>
         </div>
       </main>
+      <div className="fixed bottom-4 right-4">
+        <Link href="/profil">
+          <button className="bg-[#588157] text-white p-3 rounded-full shadow-lg hover:bg-[#3A5A40] transition">
+            <img
+              src="/placeholder-user.jpg"
+              alt="Profil"
+              className="h-8 w-8 rounded-full"
+            />
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }
