@@ -11,6 +11,7 @@ import {
   LogOut,
   Heart,
   Activity,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -103,6 +104,15 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 text-gray-600 hover:text-green-600 hover:bg-gray-100 transition duration-200 ease-in-out"
+          onClick={() => router.push("/explorer")}
+        >
+          <ArrowLeft className="h-5 w-5" /> Revenir à la page d'accueil
+        </Button>
+      </div>
       <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-1/3">
           <Card className="overflow-hidden shadow-lg">
